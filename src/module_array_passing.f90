@@ -100,7 +100,7 @@ contains
         integer (ip), intent (in)  :: n
         real (wp),    intent (out) :: mean
         !--------------------------------------------------------------------------------
-        ! Dictionary: calling arguments
+        ! Dictionary: local variables
         !--------------------------------------------------------------------------------
         real (wp)     :: data(n) !! Automatic array
         integer (ip)  :: i !! Counter
@@ -123,7 +123,7 @@ contains
         integer (ip), intent (in)  :: n
         real (wp),    intent (out) :: mean
         !--------------------------------------------------------------------------------
-        ! Dictionary: calling arguments
+        ! Dictionary: local variables
         !--------------------------------------------------------------------------------
         real (wp), allocatable :: data(:) !! Allocatable array
         integer (ip)           :: i !! Counter
@@ -152,7 +152,7 @@ contains
         integer (ip), intent (in)  :: n
         real (wp),    intent (out) :: mean
         !--------------------------------------------------------------------------------
-        ! Dictionary: calling arguments
+        ! Dictionary: local variables
         !--------------------------------------------------------------------------------
         real (wp), pointer :: data(:) => null() !! Pointer array
         integer (ip)       :: i !! Counter

@@ -54,7 +54,7 @@ program main
         ! Increment array size
         array_size = array_size * 10
 
-            ! Allocate array
+        ! Allocate array
         allocate( allocatable_data(array_size) )
 
         ! Associate pointer
@@ -87,7 +87,7 @@ program main
         ! Pass explicit shape pointer data
         call timer%start()
         do i = 1,STATIC_SIZE
-            call pass_explicit_shape_array( array_size, pointer_data(1:array_size), mean )
+            call pass_explicit_shape_array( array_size, pointer_data, mean )
             total_mean = total_mean + mean
         end do
         call timer%stop()

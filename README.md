@@ -1,6 +1,6 @@
 # **array\_passing\_performance**
 
-This project times the impact of various types of arrays and concludes that passing assumed shape dummy arguments with the **CONTIGUOUS** attribute is absolutely crucial for performance. 
+This project times the impact of various types of arrays and concludes that passing assumed shape dummy arguments with the **CONTIGUOUS** attribute is crucial for performance. 
 
 -----------------------------------------------------------------------------
 
@@ -17,11 +17,12 @@ Type the following command line arguments
 git clone https://github.com/jlokimlin/array_passing_performance.git
 
 cd array_passing_performance; make all
-
+```
 -----------------------------------------------------------------------------
 
 ## Result
 
+```
 Array size:          10
 Pass explicit shape static:                 0.240000000000000E-001
 Pass explicit shape allocatable:            0.200000000000000E-001
@@ -81,3 +82,4 @@ Local pointer:                              0.150560000000000E+002
 Total mean: 0.500130000000000E+011
  
 This result was compiled by GCC version 5.3.1
+```
