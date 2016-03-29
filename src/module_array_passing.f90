@@ -16,11 +16,11 @@ module module_array_passing
     public :: local_allocatable_array
     public :: local_pointer_array
 
+
 contains
-    !
-    !*****************************************************************************************
-    !
-    subroutine pass_assumed_shape_array_contiguous( data, mean )
+
+
+    subroutine pass_assumed_shape_array_contiguous(data, mean)
         !--------------------------------------------------------------------------------
         ! Dictionary: calling arguments
         !--------------------------------------------------------------------------------
@@ -32,20 +32,19 @@ contains
         integer (ip) :: i !! Counter
         !--------------------------------------------------------------------------------
 
-        associate( n => size( data ) )
-
+        associate( n => size(data) )
             do i = 1, n
-                data(i) = real( i, kind = wp)
+                data(i) = real(i, kind=wp)
             end do
         end associate
 
-        mean = sum( data ) / (max(1,size(data)))
+        mean = sum(data) / max(1, size(data))
 
     end subroutine pass_assumed_shape_array_contiguous
-    !
-    !*****************************************************************************************
-    !
-    subroutine pass_assumed_shape_array( data, mean )
+
+
+
+    subroutine pass_assumed_shape_array(data, mean)
         !--------------------------------------------------------------------------------
         ! Dictionary: calling arguments
         !--------------------------------------------------------------------------------
@@ -57,19 +56,20 @@ contains
         integer (ip) :: i !! Counter
         !--------------------------------------------------------------------------------
 
-        associate( n => size( data ) )
+        associate( n => size(data) )
 
             do i = 1, n
-                data(i) = real( i, kind = wp)
+                data(i) = real(i, kind=wp)
             end do
         end associate
 
-        mean = sum( data ) / (max(1,size(data)))
+        mean = sum(data) / max(1, size(data))
 
     end subroutine pass_assumed_shape_array
-    !
-    !*****************************************************************************************
-    !
+
+
+
+
     subroutine pass_explicit_shape_array( n, data, mean )
         !--------------------------------------------------------------------------------
         ! Dictionary: calling arguments
@@ -84,16 +84,17 @@ contains
         !--------------------------------------------------------------------------------
 
         do i = 1, n
-            data(i) = real( i, kind = wp)
+            data(i) = real(i, kind=wp)
         end do
 
-        mean = sum( data ) / (max(1,size(data)))
+        mean = sum(data) / max(1, size(data))
 
     end subroutine pass_explicit_shape_array
-    !
-    !*****************************************************************************************
-    !
-    subroutine local_automatic_array( n, mean )
+
+
+
+
+    subroutine local_automatic_array(n, mean)
         !--------------------------------------------------------------------------------
         ! Dictionary: calling arguments
         !--------------------------------------------------------------------------------
@@ -107,16 +108,17 @@ contains
         !--------------------------------------------------------------------------------
 
         do i = 1, n
-            data(i) = real( i, kind = wp)
+            data(i) = real(i, kind=wp)
         end do
 
-        mean = sum( data ) / (max(1,size(data)))
+        mean = sum(data) / max(1, size(data))
 
     end subroutine local_automatic_array
-    !
-    !*****************************************************************************************
-    !
-    subroutine local_allocatable_array( n, mean )
+
+
+
+
+    subroutine local_allocatable_array(n, mean)
         !--------------------------------------------------------------------------------
         ! Dictionary: calling arguments
         !--------------------------------------------------------------------------------
@@ -133,19 +135,19 @@ contains
         allocate( data(n) )
 
         do i = 1, n
-            data(i) = real( i, kind = wp)
+            data(i) = real(i, kind=wp)
         end do
 
-        mean = sum( data ) / (max(1,size(data)))
+        mean = sum(data) / max(1, size(data))
 
-        ! Free memory
+        ! Release memory
         deallocate( data )
 
     end subroutine local_allocatable_array
-    !
-    !*****************************************************************************************
-    !
-    subroutine local_pointer_array( n, mean )
+
+
+
+    subroutine local_pointer_array(n, mean)
         !--------------------------------------------------------------------------------
         ! Dictionary: calling arguments
         !--------------------------------------------------------------------------------
@@ -162,16 +164,16 @@ contains
         allocate( data(n) )
 
         do i = 1, n
-            data(i) = real( i, kind = wp)
+            data(i) = real(i, kind=wp)
         end do
 
-        mean = sum( data ) / (max(1,size(data)))
+        mean = sum(data) / max(1, size(data))
 
         ! Nullify pointer
         deallocate( data )
 
     end subroutine local_pointer_array
-    !
-    !*****************************************************************************************
-    !
+
+
+
 end module module_array_passing
