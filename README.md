@@ -1,6 +1,6 @@
 # **array\_passing\_performance**
 
-This project times the impact of various types of arrays and concludes that passing assumed shape dummy arguments with the **CONTIGUOUS** attribute is crucial for performance. 
+This project times the impact of various types of arrays and concludes that passing assumed-shape dummy arguments with the **contiguous** attribute is crucial for performance. 
 
 -----------------------------------------------------------------------------
 

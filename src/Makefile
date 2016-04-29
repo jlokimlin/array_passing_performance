@@ -12,14 +12,14 @@ type_CpuTimer.f90
 	$(FC) $(FFLAGS) -c type_CpuTimer.f90 $(LINKS) \
 	 -o $(OBJ_DIRECTORY)/$@ -J$(LIB_DIRECTORY)
 
-module_array_passing.o: \
-module_array_passing.f90
-	$(FC) $(FFLAGS) -c module_array_passing.f90 $(LINKS) \
+type_array_passer.o: \
+type_array_passer.f90
+	$(FC) $(FFLAGS) -c type_array_passer.f90 $(LINKS) \
 	 -o $(OBJ_DIRECTORY)/$@ -J$(LIB_DIRECTORY)
 
 main.o: \
 type_CpuTimer.o \
-module_array_passing.o \
+type_array_passer.o \
 main.f90
 	$(FC) $(FFLAGS) -c main.f90 $(LINKS) \
 	-o $(OBJ_DIRECTORY)/$@

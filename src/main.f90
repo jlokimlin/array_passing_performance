@@ -10,186 +10,360 @@ program main
     use type_CpuTimer, only: &
         CpuTimer
 
-    use module_array_passing, only: &
-        pass_assumed_shape_array_contiguous, &
-        pass_assumed_shape_array, &
-        pass_explicit_shape_array, &
-        local_automatic_array, &
-        local_allocatable_array, &
-        local_pointer_array
+    use type_array_passer, only: &
+        ArrayPasser
 
     ! Explicit typing only
     implicit none
 
-    !--------------------------------------------------------------------------------
+    ! Declare derived data type
+    type :: TimeKeeper
+        !--------------------------------------------------
+        ! Class variables
+        !--------------------------------------------------
+        real (wp) :: contiguous_static = 0.0_wp
+        real (wp) :: contiguous_alloc = 0.0_wp
+        real (wp) :: contiguous_pointer = 0.0_wp
+        real (wp) :: assumed_static = 0.0_wp
+        real (wp) :: assumed_alloc = 0.0_wp
+        real (wp) :: assumed_pointer = 0.0_wp
+        real (wp) :: explicit_static = 0.0_wp
+        real (wp) :: explicit_alloc = 0.0_wp
+        real (wp) :: explicit_pointer = 0.0_wp
+        real (wp) :: local_auto = 0.0_wp
+        real (wp) :: local_alloc = 0.0_wp
+        real (wp) :: local_pointer = 0.0_wp
+        !--------------------------------------------------
+    end type
+
+    !------------------------------------------------------
     ! Dictionary
-    !--------------------------------------------------------------------------------
-    type (CpuTimer)         :: timer
+    !------------------------------------------------------
     integer (ip), parameter :: STATIC_SIZE = 10**6
     integer (ip)            :: array_size
     integer (ip)            :: i, j !! Counters
-    real (wp)               :: time_contiguous_static
-    real (wp)               :: time_contiguous_alloc
-    real (wp)               :: time_contiguous_pointer
-    real (wp)               :: time_assumed_static
-    real (wp)               :: time_assumed_alloc
-    real (wp)               :: time_assumed_pointer
-    real (wp)               :: time_explicit_static
-    real (wp)               :: time_explicit_alloc
-    real (wp)               :: time_explicit_pointer
-    real (wp)               :: time_local_auto
-    real (wp)               :: time_local_alloc
-    real (wp)               :: time_local_pointer
     real (wp)               :: mean, total_mean
     real (wp), target       :: static_data(STATIC_SIZE)
     real (wp), allocatable  :: allocatable_data(:)
     real (wp), pointer      :: pointer_data(:) => null()
-    !--------------------------------------------------------------------------------
+    type (ArrayPasser)      :: pass
+    type (CpuTimer)         :: cpu_timer
+    type (TimeKeeper)       :: time_keeper
+    !------------------------------------------------------
 
-    !
-    !==> Initialize
-    !
+    ! Initialize
     array_size = 1
+    pass = ArrayPasser(f=get_mean)
 
     do j = 1, 4
 
         ! Increment array size
         array_size = array_size * 10
 
-        ! Allocate array
+        !
+        !==> Allocate memory
+        !
         allocate( allocatable_data(array_size) )
 
-        ! Associate pointer
+        !
+        !==> Assign pointer
+        !
         pointer_data => static_data(1:array_size)
 
         !
-        !==> explicit-shape array passing
+        !==>  Pass explicit-shape static data
         !
+        associate ( time => time_keeper%explicit_static )
 
-        ! Pass explicit-shape static data
-        call timer%start()
-        do i = 1,STATIC_SIZE
+            ! Start timer
+            call cpu_timer%start()
+
+            do i = 1,STATIC_SIZE
+                associate( subarray => static_data(1:array_size) )
+
+                    ! Pass array
+                    call pass%explicit_shape_array(array_size, subarray, mean)
+
+                    ! Update total mean
+                    total_mean = total_mean + mean
+                end associate
+            end do
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
+        end associate
+
+        !
+        !==>  Pass explicit-shape allocatable data
+        !
+        associate( time => time_keeper%explicit_alloc )
+
+            ! Start timer
+            call cpu_timer%start()
+
+            do i = 1,STATIC_SIZE
+
+                ! Pass array
+                call pass%explicit_shape_array(array_size, allocatable_data, mean)
+
+                ! Update total mean
+                total_mean = total_mean + mean
+            end do
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
+        end associate
+
+        !
+        !==>  Pass explicit-shape pointer data
+        !
+        associate( time => time_keeper%explicit_pointer )
+
+            ! Start timer
+            call cpu_timer%start()
+
+            do i = 1,STATIC_SIZE
+
+                ! Pass array
+                call pass%explicit_shape_array(array_size, pointer_data, mean)
+
+                ! Update total mean
+                total_mean = total_mean + mean
+            end do
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
+        end associate
+
+        !
+        !==>  Pass assumed-shape static data
+        !
+        associate( time => time_keeper%assumed_static )
+
+            ! Start timer
+            call cpu_timer%start()
+
             associate( subarray => static_data(1:array_size) )
-                call pass_explicit_shape_array( array_size, subarray, mean )
-                total_mean = total_mean + mean
+                do i = 1,STATIC_SIZE
+
+                    ! Pass array
+                    call pass%assumed_shape_array(subarray, mean)
+
+                    ! Update total mean
+                    total_mean = total_mean + mean
+                end do
             end associate
-        end do
-        call timer%stop()
-        time_explicit_static = timer%get_total_cpu_time()
 
-        ! Pass explicit-shape allocatable data
-        call timer%start()
-        do i = 1,STATIC_SIZE
-            call pass_explicit_shape_array( array_size, allocatable_data, mean )
-            total_mean = total_mean + mean
-        end do
-        call timer%stop()
-        time_explicit_alloc = timer%get_total_cpu_time()
+            ! Stop timer
+            call cpu_timer%stop()
 
-        ! Pass explicit-shape pointer data
-        call timer%start()
-        do i = 1,STATIC_SIZE
-            call pass_explicit_shape_array( array_size, pointer_data, mean )
-            total_mean = total_mean + mean
-        end do
-        call timer%stop()
-        time_explicit_pointer = timer%get_total_cpu_time()
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
+        end associate
 
         !
-        !==> assumed-shape array passing
+        !==>  Pass assumed-shape allocatable data
         !
+        associate( time => time_keeper%assumed_alloc )
 
-        ! Pass assumed-shape static data
-        call timer%start()
-        associate( subarray => static_data(1:array_size) )
+            ! Start timer
+            call cpu_timer%start()
+
             do i = 1,STATIC_SIZE
-                call pass_assumed_shape_array( subarray, mean )
+
+                ! Pass array
+                call pass%assumed_shape_array(allocatable_data, mean)
+
+                ! Update total mean
                 total_mean = total_mean + mean
             end do
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
         end associate
-        call timer%stop()
-        time_assumed_static = timer%get_total_cpu_time()
-
-        ! Pass assumed-shape allocatable data
-        call timer%start()
-        do i = 1,STATIC_SIZE
-            call pass_assumed_shape_array( allocatable_data, mean )
-            total_mean = total_mean + mean
-        end do
-        call timer%stop()
-        time_assumed_alloc = timer%get_total_cpu_time()
-
-        ! Pass assumed-shape pointer data
-        call timer%start()
-
-        do i = 1,STATIC_SIZE
-            call pass_assumed_shape_array( pointer_data, mean )
-            total_mean = total_mean + mean
-        end do
-        call timer%stop()
-        time_assumed_pointer = timer%get_total_cpu_time()
 
         !
-        !==> Contiguous assumed-shape array passing
+        !==>  Pass assumed-shape pointer data
+        !
+        associate( time => time_keeper%assumed_pointer )
 
-        ! Pass contiguous assumed-shape static data
-        call timer%start()
-        associate( subarray => static_data(1:array_size) )
+            ! Start timer
+            call cpu_timer%start()
+
             do i = 1,STATIC_SIZE
-                call pass_assumed_shape_array_contiguous( subarray, mean )
+
+                ! Pass array
+                call pass%assumed_shape_array(pointer_data, mean)
+
+                ! Update total mean
                 total_mean = total_mean + mean
             end do
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
         end associate
-        call timer%stop()
-        time_contiguous_static = timer%get_total_cpu_time()
-
-        ! Pass contiguous assumed-shape allocatable data
-        call timer%start()
-        do i = 1,STATIC_SIZE
-            call pass_assumed_shape_array_contiguous( allocatable_data, mean )
-            total_mean = total_mean + mean
-        end do
-        call timer%stop()
-        time_contiguous_alloc = timer%get_total_cpu_time()
-
-        ! Pass contiguous assumed-shape pointer data
-        call timer%start()
-        do i = 1,STATIC_SIZE
-            call pass_assumed_shape_array_contiguous( pointer_data, mean )
-            total_mean = total_mean + mean
-        end do
-        call timer%stop()
-        time_contiguous_pointer = timer%get_total_cpu_time()
 
         !
-        !==> Local arrays
+        !==>  Pass contiguous assumed-shape static data
         !
+        associate( time => time_keeper%contiguous_static )
 
-        ! Local automatic array
-        call timer%start()
-        do i = 1,STATIC_SIZE
-            call local_automatic_array( array_size, mean )
-        end do
-        call timer%stop()
-        time_local_auto = timer%get_total_cpu_time()
+            ! Start timer
+            call cpu_timer%start()
 
-        ! Local allocatable array
-        call timer%start()
-        do i = 1,STATIC_SIZE
-            call local_allocatable_array( array_size, mean )
-        end do
-        call timer%stop()
-        time_local_alloc = timer%get_total_cpu_time()
+            associate( subarray => static_data(1:array_size) )
+                do i = 1,STATIC_SIZE
 
-        ! Local pointer array
-        call timer%start()
-        do i = 1,STATIC_SIZE
-            call local_pointer_array( array_size, mean )
-        end do
-        call timer%stop()
-        time_local_pointer = timer%get_total_cpu_time()
+                    ! Pass array
+                    call pass%assumed_shape_array_contiguous( subarray, mean)
 
-        ! Deallocate array
+                    ! Update total mean
+                    total_mean = total_mean + mean
+                end do
+            end associate
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
+        end associate
+
+        !
+        !==>  Pass contiguous assumed-shape allocatable data
+        !
+        associate( time => time_keeper%contiguous_alloc )
+
+            ! Start timer
+            call cpu_timer%start()
+
+            do i = 1,STATIC_SIZE
+
+                ! Pass array
+                call pass%assumed_shape_array_contiguous(allocatable_data, mean)
+
+                ! Update total mean
+                total_mean = total_mean + mean
+            end do
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
+        end associate
+
+        !
+        !==>  Pass contiguous assumed-shape pointer data
+        !
+        associate( time => time_keeper%contiguous_pointer )
+
+            ! Start timer
+            call cpu_timer%start()
+
+            do i = 1,STATIC_SIZE
+                ! Pass array
+                call pass%assumed_shape_array_contiguous( pointer_data, mean)
+
+                ! Update total mean
+                total_mean = total_mean + mean
+            end do
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
+        end associate
+
+        !
+        !==>  Local automatic array
+        !
+        associate( time => time_keeper%local_auto )
+
+            ! Start timer
+            call cpu_timer%start()
+
+            do i = 1,STATIC_SIZE
+
+                ! Pass array
+                call pass%local_automatic_array(array_size, mean)
+
+                ! Update total mean
+                total_mean = total_mean + mean
+            end do
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
+        end associate
+
+        !
+        !==>  Local allocatable array
+        !
+        associate( time => time_keeper%local_alloc )
+
+            ! Start timer
+            call cpu_timer%start()
+
+            do i = 1,STATIC_SIZE
+
+                ! Pass array
+                call pass%local_allocatable_array(array_size, mean)
+
+                ! Update total mean
+                total_mean = total_mean + mean
+            end do
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
+        end associate
+
+        !
+        !==>  Local pointer array
+        !
+        associate( time => time_keeper%local_pointer )
+
+            ! Start timer
+            call cpu_timer%start()
+
+            do i = 1,STATIC_SIZE
+
+                ! Pass array
+                call pass%local_pointer_array(array_size, mean)
+
+                ! Update total mean
+                total_mean = total_mean + mean
+            end do
+
+            ! Stop timer
+            call cpu_timer%stop()
+
+            ! Get elapsed CPU time
+            time = cpu_timer%get_total_cpu_time()
+        end associate
+
+        ! Release memory
         deallocate( allocatable_data )
 
         ! Nullify pointer
@@ -200,22 +374,24 @@ program main
         !
         write( stdout, '(A)' ) ''
         write( stdout, '(A,I11)' )      'Array size: ', array_size
-        write( stdout, '(A,E23.15E3)' ) 'Pass explicit-shape static:                ', time_explicit_static
-        write( stdout, '(A,E23.15E3)' ) 'Pass explicit-shape allocatable:           ', time_explicit_alloc
-        write( stdout, '(A,E23.15E3)' ) 'Pass explicit-shape pointer:               ', time_explicit_pointer
-        write( stdout, '(A,E23.15E3)' ) 'Pass assumed-shape static:                 ', time_assumed_static
-        write( stdout, '(A,E23.15E3)' ) 'Pass assumed-shape allocatable:            ', time_assumed_alloc
-        write( stdout, '(A,E23.15E3)' ) 'Pass assumed-shape pointer:                ', time_assumed_pointer
-        write( stdout, '(A,E23.15E3)' ) 'Pass assumed-shape contiguous static:      ', time_contiguous_static
-        write( stdout, '(A,E23.15E3)' ) 'Pass assumed-shape contiguous allocatable: ', time_contiguous_alloc
-        write( stdout, '(A,E23.15E3)' ) 'Pass assumed-shape contiguous pointer:     ', time_contiguous_pointer
-        write( stdout, '(A,E23.15E3)' ) 'Local automatic:                           ', time_local_auto
-        write( stdout, '(A,E23.15E3)' ) 'Local allocatable:                         ', time_local_alloc
-        write( stdout, '(A,E23.15E3)' ) 'Local pointer:                             ', time_local_pointer
+        write( stdout, '(A,E23.15E3)' ) 'Explicit-shape static:                ', time_keeper%explicit_static
+        write( stdout, '(A,E23.15E3)' ) 'Explicit-shape allocatable:           ', time_keeper%explicit_alloc
+        write( stdout, '(A,E23.15E3)' ) 'Explicit-shape pointer:               ', time_keeper%explicit_pointer
+        write( stdout, '(A,E23.15E3)' ) 'Assumed-shape static:                 ', time_keeper%assumed_static
+        write( stdout, '(A,E23.15E3)' ) 'Assumed-shape allocatable:            ', time_keeper%assumed_alloc
+        write( stdout, '(A,E23.15E3)' ) 'Assumed-shape pointer:                ', time_keeper%assumed_pointer
+        write( stdout, '(A,E23.15E3)' ) 'Assumed-shape contiguous static:      ', time_keeper%contiguous_static
+        write( stdout, '(A,E23.15E3)' ) 'Assumed-shape contiguous allocatable: ', time_keeper%contiguous_alloc
+        write( stdout, '(A,E23.15E3)' ) 'Assumed-shape contiguous pointer:     ', time_keeper%contiguous_pointer
+        write( stdout, '(A,E23.15E3)' ) 'Local automatic:                      ', time_keeper%local_auto
+        write( stdout, '(A,E23.15E3)' ) 'Local allocatable:                    ', time_keeper%local_alloc
+        write( stdout, '(A,E23.15E3)' ) 'Local pointer:                        ', time_keeper%local_pointer
+        write( stdout, '(A)' ) ''
     end do
 
-    ! Print total mean
-    write( stdout, '(A)' ) ''
+    !
+    !==> Print total mean
+    !
     write( stdout, '(A,E23.15E3)' ) 'Total mean:', total_mean
 
     !
@@ -226,5 +402,21 @@ program main
         compiler_version(), ' using the options ', &
         compiler_options()
     write( stdout, '(A)' ) ' '
+
+
+contains
+
+
+    pure function get_mean(data) result (mean)
+        !------------------------------------------------------------------
+        ! Dictionary: calling arguments
+        !------------------------------------------------------------------
+        real (wp), intent (in) :: data(:)
+        real (wp)              :: mean
+        !------------------------------------------------------------------
+
+        mean = sum(data) / max(1, size(data))
+
+    end function get_mean
 
 end program main
