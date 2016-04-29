@@ -15,14 +15,14 @@ module type_array_passer
     ! Declare derived array type
     type, public :: ArrayPasser
         !----------------------------------------------------------------------
-        ! Dictionary: calling arguments
+        ! Class variables
         !----------------------------------------------------------------------
         logical, private                            :: usable = .false.
         procedure (func_interface), nopass, pointer :: f => null()
         !----------------------------------------------------------------------
     contains
         !----------------------------------------------------------------------
-        ! Dictionary: calling arguments
+        ! Class methods
         !----------------------------------------------------------------------
         procedure, public :: assumed_shape_array_contiguous
         procedure, public :: assumed_shape_array

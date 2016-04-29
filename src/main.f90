@@ -73,7 +73,7 @@ program main
         !
         !==>  Pass explicit-shape static data
         !
-        associate ( time => time_keeper%explicit_static )
+        associate( time => time_keeper%explicit_static )
 
             ! Start timer
             call cpu_timer%start()
