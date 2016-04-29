@@ -25,62 +25,65 @@ cd array_passing_performance; make all
 ```
 
 	Array size:          10
-	Pass explicit-shape static:                 0.229960000000000E-001
-	Pass explicit-shape allocatable:            0.229970000000000E-001
-	Pass explicit-shape pointer:                0.349940000000000E-001
-	Pass assumed-shape static:                  0.249960000000000E-001
-	Pass assumed-shape allocatable:             0.249970000000000E-001
-	Pass assumed-shape pointer:                 0.239960000000000E-001
-	Pass assumed-shape contiguous static:       0.229960000000000E-001
-	Pass assumed-shape contiguous allocatable:  0.239970000000000E-001
-	Pass assumed-shape contiguous pointer:      0.349940000000000E-001
-	Local automatic:                            0.589920000000000E-001
-	Local allocatable:                          0.539910000000000E-001
-	Local pointer:                              0.549920000000000E-001
+	Explicit-shape static:                 0.200000000000000E-001
+	Explicit-shape allocatable:            0.240000000000000E-001
+	Explicit-shape pointer:                0.320000000000000E-001
+	Assumed-shape static:                  0.200000000000000E-001
+	Assumed-shape allocatable:             0.200000000000000E-001
+	Assumed-shape pointer:                 0.240000000000000E-001
+	Assumed-shape contiguous static:       0.200000000000000E-001
+	Assumed-shape contiguous allocatable:  0.200000000000000E-001
+	Assumed-shape contiguous pointer:      0.320000000000000E-001
+	Local automatic:                       0.440000000000000E-001
+	Local allocatable:                     0.480000000000000E-001
+	Local pointer:                         0.440000000000000E-001
+	
 	
 	Array size:         100
-	Pass explicit-shape static:                 0.173973000000000E+000
-	Pass explicit-shape allocatable:            0.175974000000000E+000
-	Pass explicit-shape pointer:                0.189971000000000E+000
-	Pass assumed-shape static:                  0.228965000000000E+000
-	Pass assumed-shape allocatable:             0.225966000000000E+000
-	Pass assumed-shape pointer:                 0.222966000000000E+000
-	Pass assumed-shape contiguous static:       0.170974000000000E+000
-	Pass assumed-shape contiguous allocatable:  0.174973000000000E+000
-	Pass assumed-shape contiguous pointer:      0.186972000000000E+000
-	Local automatic:                            0.218967000000000E+000
-	Local allocatable:                          0.222966000000000E+000
-	Local pointer:                              0.227965000000000E+000
+	Explicit-shape static:                 0.148000000000000E+000
+	Explicit-shape allocatable:            0.144000000000000E+000
+	Explicit-shape pointer:                0.152000000000000E+000
+	Assumed-shape static:                  0.180000000000000E+000
+	Assumed-shape allocatable:             0.180000000000000E+000
+	Assumed-shape pointer:                 0.180000000000000E+000
+	Assumed-shape contiguous static:       0.140000000000000E+000
+	Assumed-shape contiguous allocatable:  0.140000000000000E+000
+	Assumed-shape contiguous pointer:      0.160000000000000E+000
+	Local automatic:                       0.184000000000000E+000
+	Local allocatable:                     0.180000000000000E+000
+	Local pointer:                         0.172000000000000E+000
+	
 	
 	Array size:        1000
-	Pass explicit-shape static:                 0.169774200000000E+001
-	Pass explicit-shape allocatable:            0.169274300000000E+001
-	Pass explicit-shape pointer:                0.170574000000000E+001
-	Pass assumed-shape static:                  0.210068100000000E+001
-	Pass assumed-shape allocatable:             0.209968100000000E+001
-	Pass assumed-shape pointer:                 0.210068000000000E+001
-	Pass assumed-shape contiguous static:       0.168874400000000E+001
-	Pass assumed-shape contiguous allocatable:  0.168874300000000E+001
-	Pass assumed-shape contiguous pointer:      0.170574100000000E+001
-	Local automatic:                            0.173673600000000E+001
-	Local allocatable:                          0.173773500000000E+001
-	Local pointer:                              0.174373500000000E+001
+	Explicit-shape static:                 0.140800000000000E+001
+	Explicit-shape allocatable:            0.140400000000000E+001
+	Explicit-shape pointer:                0.140800000000000E+001
+	Assumed-shape static:                  0.166400000000000E+001
+	Assumed-shape allocatable:             0.166000000000000E+001
+	Assumed-shape pointer:                 0.174800000000000E+001
+	Assumed-shape contiguous static:       0.147600000000000E+001
+	Assumed-shape contiguous allocatable:  0.146400000000000E+001
+	Assumed-shape contiguous pointer:      0.141600000000000E+001
+	Local automatic:                       0.148800000000000E+001
+	Local allocatable:                     0.146800000000000E+001
+	Local pointer:                         0.150400000000000E+001
+	
 	
 	Array size:       10000
-	Pass explicit-shape static:                 0.167694510000000E+002
-	Pass explicit-shape allocatable:            0.167684510000000E+002
-	Pass explicit-shape pointer:                0.167794490000000E+002
-	Pass assumed-shape static:                  0.208948230000000E+002
-	Pass assumed-shape allocatable:             0.208978230000000E+002
-	Pass assumed-shape pointer:                 0.208948240000000E+002
-	Pass assumed-shape contiguous static:       0.167654510000000E+002
-	Pass assumed-shape contiguous allocatable:  0.167604520000000E+002
-	Pass assumed-shape contiguous pointer:      0.167754500000000E+002
-	Local automatic:                            0.168354410000000E+002
-	Local allocatable:                          0.168374400000000E+002
-	Local pointer:                              0.168394400000000E+002
+	Explicit-shape static:                 0.142960000000000E+002
+	Explicit-shape allocatable:            0.143520000000000E+002
+	Explicit-shape pointer:                0.142800000000000E+002
+	Assumed-shape static:                  0.166920000000000E+002
+	Assumed-shape allocatable:             0.167040000000000E+002
+	Assumed-shape pointer:                 0.167720000000000E+002
+	Assumed-shape contiguous static:       0.140360000000000E+002
+	Assumed-shape contiguous allocatable:  0.140640000000000E+002
+	Assumed-shape contiguous pointer:      0.140400000000000E+002
+	Local automatic:                       0.140840000000000E+002
+	Local allocatable:                     0.141480000000000E+002
+	Local pointer:                         0.141200000000000E+002
 	
-	Total mean: 0.500130000000000E+011
+	Total mean: 0.666840000000000E+011
 	 
-	This result was compiled by GCC version 5.1.0
+	This result was compiled by GCC version 5.3.1
 ```
