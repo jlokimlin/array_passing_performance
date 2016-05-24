@@ -3,7 +3,10 @@ module type_CpuTimer
     use, intrinsic :: iso_fortran_env, only: &
         wp => REAL64, &
         ip => INT32, &
-        stdout => OUTPUT_UNIT
+        long => INT64, &
+        stdout => OUTPUT_UNIT, &
+        compiler_version, &
+        compiler_options
 
     ! Explicit typing only
     implicit none
@@ -16,9 +19,9 @@ module type_CpuTimer
     !-----------------------------------------------------------------------
     ! Dictionary: global variables confined to the module
     !-----------------------------------------------------------------------
-    integer (ip), parameter  :: REQUEST_TIME_IN_SECONDS = 0
-    integer (ip), parameter  :: REQUEST_TIME_IN_MINUTES = 1
-    integer (ip), parameter  :: REQUEST_TIME_IN_HOURS = 2
+    integer (ip), parameter  :: REQUEST_TIME_IN_SECONDS = 0_ip
+    integer (ip), parameter  :: REQUEST_TIME_IN_MINUTES = 1_ip
+    integer (ip), parameter  :: REQUEST_TIME_IN_HOURS = 2_ip
     !-----------------------------------------------------------------------
 
 
@@ -27,16 +30,16 @@ module type_CpuTimer
         !-----------------------------------------------------------------------
         ! Class variables
         !-----------------------------------------------------------------------
-        logical,      private :: initialized = .false.
-        logical,      private :: timer_started  = .false.
-        logical,      private :: timer_stopped = .false.
-        real (wp),    private :: cpu_start_time = 0.0_wp
-        real (wp),    private :: cpu_finish_time = 0.0_wp
-        integer (ip), private :: initial_ticks = 0
-        integer (ip), private :: final_ticks = 0  ! final value of the clock tick counter
-        integer (ip), private :: count_max = 0  ! maximum value of the clock counter
-        integer (ip), private :: count_rate = 0  ! number of clock ticks per second
-        integer (ip), private :: num_ticks = 0  ! number of clock ticks of the code
+        logical,        private :: initialized = .false.
+        logical,        private :: timer_started  = .false.
+        logical,        private :: timer_stopped = .false.
+        real (wp),      private :: cpu_start_time = 0.0_wp
+        real (wp),      private :: cpu_finish_time = 0.0_wp
+        integer (long), private :: initial_ticks = 0_long
+        integer (long), private :: final_ticks = 0_long  ! final value of the clock tick counter
+        integer (long), private :: count_max = 0_long  ! maximum value of the clock counter
+        integer (long), private :: count_rate = 0_long  ! number of clock ticks per second
+        integer (long), private :: num_ticks = 0_long  ! number of clock ticks of the code
         !-----------------------------------------------------------------------
     contains
         !-----------------------------------------------------------------------
@@ -47,8 +50,9 @@ module type_CpuTimer
         procedure, public         :: get_total_cpu_time
         procedure, public         :: get_elapsed_time
         procedure, public, nopass :: print_time_stamp
-        procedure, private        :: create => initialize_cpu_timer
-        procedure, private        :: destroy => destruct_cpu_timer
+        procedure, public, nopass :: print_compiler_info
+        procedure, private        :: create_cpu_timer
+        procedure, private        :: destroy_cpu_timer
         final                     :: finalize_cpu_timer
         !----------------------------------------------------------------------
     end type CpuTimer
@@ -65,16 +69,24 @@ contains
         !----------------------------------------------------------------------
 
         ! Initialize timer
-        call this%create()
+        call this%create_cpu_timer()
 
-        ! Set CPU start time
+        !
+        !==> Set CPU start time
+        !
         associate( start => this%cpu_start_time )
+
             call cpu_time(start)
+
         end associate
 
-        ! Set initial ticks
+        !
+        !==> Set initial ticks
+        !
         associate( count => this%initial_ticks )
+
             call system_clock(count=count)
+
         end associate
 
         ! Set timer status
@@ -92,22 +104,36 @@ contains
         !----------------------------------------------------------------------
 
         ! Check timer flag
-        if (this%timer_started .eqv. .false.) return
+        if (this%timer_started .eqv. .true.) then
+            !
+            !==> Set cpu finish time
+            !
+            associate( finish => this%cpu_finish_time )
 
-        ! Set cpu finish time
-        call cpu_time(this%cpu_finish_time )
+                call cpu_time(finish)
 
-        ! Set final ticks
-        call system_clock( count=this%final_ticks )
+            end associate
+            !
+            !==> Set final ticks
+            !
+            associate( count => this%final_ticks )
 
-        ! Set timer status
-        this%timer_stopped = .true.
+                call system_clock(count=count)
+
+            end associate
+
+            !
+            !==> Set timer status
+            !
+            this%timer_stopped = .true.
+
+        end if
 
     end subroutine stop_cpu_timer
 
 
 
-    function get_total_cpu_time(this, units) result( return_value )
+    function get_total_cpu_time(this, units) result (return_value)
         !----------------------------------------------------------------------
         ! Dictionary: calling arguments
         !----------------------------------------------------------------------
@@ -116,37 +142,46 @@ contains
         real (wp)                               :: return_value
         !----------------------------------------------------------------------
 
-        ! Initialize return value
-        return_value = 0.0_wp
+        ! Check initialization flag
+        if (this%timer_started .eqv. .false.) then
+            !
+            !==> Return zero if the timer was never started
+            !
+            return_value = 0.0_wp
+        else
+            !
+            !==> If the timer was not stopped,
+            !    then return the current time elapsed
+            !
+            if (this%timer_stopped .eqv. .false.) call this%stop()
 
-        ! Return zero if the timer was never started
-        if ( this%timer_started .eqv. .false. ) return
+            associate( &
+                start => this%cpu_start_time, &
+                finish => this%cpu_finish_time &
+                )
+                !
+                !==> Set total cpu time in seconds
+                !
+                return_value = finish - start
+            end associate
 
-        ! If the timer was not stopped, then return the current time elapsed
-        if ( this%timer_stopped .eqv. .false. ) call this%stop()
-
-        ! Set total time
-        associate( &
-            start => this%cpu_start_time, &
-            finish => this%cpu_finish_time &
-            )
-            return_value = finish - start
-        end associate
-
-        ! Convert to requested units if desired
-        if (present(units)) then
-            select case (units)
-                case(REQUEST_TIME_IN_SECONDS)
-                    return
-                case(REQUEST_TIME_IN_MINUTES)
-                    return_value = return_value/ 60
-                case(REQUEST_TIME_IN_HOURS)
-                    return_value = return_value/ 3600
-                case default
-                    error stop 'TYPE(CpuTimer): '&
-                        //' Invalid calling argument in GET_TOTAL_CPU_TIME'&
-                        //' UNITS must be either 0 (seconds), 1 (minutes), or 2 (hours)'
-            end select
+            !
+            !==> Convert to requested units if desired
+            !
+            if (present(units)) then
+                select case (units)
+                    case(REQUEST_TIME_IN_SECONDS)
+                        return
+                    case(REQUEST_TIME_IN_MINUTES)
+                        return_value = return_value/60
+                    case(REQUEST_TIME_IN_HOURS)
+                        return_value = return_value/3600
+                    case default
+                        error stop 'Object of class (CpuTimer): '&
+                            //' invalid calling argument in get_total_cpu_time '&
+                            //' units must be either 0 (seconds), 1 (minutes), or 2 (hours)'
+                end select
+            end if
         end if
 
     end function get_total_cpu_time
@@ -163,47 +198,62 @@ contains
         real (wp)                               :: return_value
         !----------------------------------------------------------------------
 
-        ! Initialize return value
-        return_value = 0.0_wp
+        ! Check initialization flag
+        if (this%timer_started .eqv. .false.) then
+            !
+            !==> Return zero if the timer was never started
+            !
+            return_value = 0.0_wp
+        else
 
-        ! Return zero if the timer was never started
-        if ( this%timer_started .eqv. .false. ) return
+            !
+            !==> If the timer was not stopped,
+            !    then return the current time elapsed
+            !
+            if (this%timer_stopped .eqv. .false.) call this%stop()
 
-        ! If the timer was not stopped, then return the current time elapsed
-        if ( this%timer_stopped .eqv. .false. ) call this%stop()
+            !
+            !==> Set elapsed time in seconds
+            !
+            associate( &
+                num => this%num_ticks, &
+                final => this%final_ticks, &
+                initial => this%initial_ticks, &
+                count_max => this%count_max, &
+                count_rate => this%count_rate &
+                )
 
-        ! Set elapsed time in seconds
-        associate( &
-            num => this%num_ticks, &
-            final => this%final_ticks, &
-            initial => this%initial_ticks, &
-            count_max => this%count_max, &
-            count_rate => this%count_rate &
-            )
-            num = final - initial
-            if ( final < initial ) then
-                num = num + count_max
+                num = final - initial
+
+                if ( final < initial ) then
+                    num = num + count_max
+                end if
+
+                return_value = real(num, kind=wp)/count_rate
+
+            end associate
+
+            !
+            !==> Convert to requested units if desired
+            !
+            if (present(units)) then
+                select case (units)
+                    case (REQUEST_TIME_IN_SECONDS)
+                        return
+                    case (REQUEST_TIME_IN_MINUTES)
+                        return_value = return_value/60
+                    case (REQUEST_TIME_IN_HOURS)
+                        return_value = return_value/ 3600
+                    case default
+                        error stop 'Object of class (CpuTimer): '&
+                            //' invalid calling argument in get_elapsed_time'&
+                            //' units must be either 0 (seconds), 1 (minutes), or 2 (hours)'
+                end select
             end if
-            return_value = real(num, kind=wp) / count_rate
-        end associate
-
-        ! Convert to requested units if desired
-        if ( present(units) ) then
-            select case (units)
-                case (REQUEST_TIME_IN_SECONDS)
-                    return
-                case (REQUEST_TIME_IN_MINUTES )
-                    return_value = return_value/ 60
-                case (REQUEST_TIME_IN_HOURS )
-                    return_value = return_value/ 3600
-                case default
-                    error stop 'TYPE(CpuTimer): '&
-                        //' Invalid calling argument in GET_ELAPSED_TIME'&
-                        //' UNITS must be either 0 (seconds), 1 (minutes), or 2 (hours)'
-            end select
         end if
 
     end function get_elapsed_time
+
 
 
     subroutine print_time_stamp(file_unit)
@@ -237,7 +287,7 @@ contains
         ! Dictionary: local variables
         !----------------------------------------------------------------------
         integer (ip)                  :: file_unit_op
-        integer (ip)                  :: values(8)
+        integer (long)                :: values(8)
         character (len=10)            :: time
         character (len=5)             :: zone
         character (len=8)             :: am_or_pm
@@ -252,8 +302,12 @@ contains
 
         !
         !==> Address optional argument
-        file_unit_op = stdout
-        if (present(file_unit)) file_unit_op = file_unit
+        !
+        if (present(file_unit)) then
+            file_unit_op = file_unit
+        else
+            file_unit_op = stdout
+        end if
 
         !
         !==> Get the corresponding date and time information
@@ -308,7 +362,39 @@ contains
     end subroutine print_time_stamp
 
 
-    subroutine initialize_cpu_timer(this)
+    subroutine print_compiler_info(file_unit)
+        !----------------------------------------------------------------------
+        ! Dictionary: calling arguments
+        !----------------------------------------------------------------------
+        integer (ip), intent (in), optional :: file_unit
+        !----------------------------------------------------------------------
+        ! Dictionary: calling arguments
+        !----------------------------------------------------------------------
+        integer (ip) :: file_unit_op
+        !----------------------------------------------------------------------
+
+        !
+        !==> Address optional argument
+        !
+        if (present(file_unit)) then
+            file_unit_op = file_unit
+        else
+            file_unit_op = stdout
+        end if
+
+        !
+        !==> Print compiler info
+        !
+        write( file_unit_op, '(A)' ) ''
+        write( file_unit_op, '(4A)' ) 'This file was compiled by ', &
+            compiler_version(), ' using the options ', &
+            compiler_options()
+        write( file_unit_op, '(A)' ) ''
+
+    end subroutine print_compiler_info
+
+
+    subroutine create_cpu_timer(this)
         !----------------------------------------------------------------------
         ! Dictionary: calling arguments
         !----------------------------------------------------------------------
@@ -316,21 +402,23 @@ contains
         !----------------------------------------------------------------------
 
         ! Ensure that object is usable
-        call this%destroy()
+        call this%destroy_cpu_timer()
 
         ! Initialize counters
         associate( &
             count_rate => this%count_rate, &
             count_max => this%count_max &
             )
+
             call system_clock(count_rate=count_rate, count_max=count_max)
+
         end associate
 
-    end subroutine initialize_cpu_timer
+    end subroutine create_cpu_timer
 
 
 
-    subroutine destruct_cpu_timer(this)
+    subroutine destroy_cpu_timer(this)
         !----------------------------------------------------------------------
         ! Dictionary: calling arguments
         !----------------------------------------------------------------------
@@ -350,13 +438,13 @@ contains
         this%cpu_finish_time = 0.0_wp
 
         ! Reset integers
-        this%initial_ticks = 0
-        this%final_ticks = 0
-        this%count_max = 0
-        this%count_rate = 0
-        this%num_ticks = 0
+        this%initial_ticks = 0_long
+        this%final_ticks = 0_long
+        this%count_max = 0_long
+        this%count_rate = 0_long
+        this%num_ticks = 0_long
 
-    end subroutine destruct_cpu_timer
+    end subroutine destroy_cpu_timer
 
 
 
@@ -368,7 +456,7 @@ contains
         type (CpuTimer), intent (in out) :: this
         !----------------------------------------------------------------------
 
-        call this%destroy()
+        call this%destroy_cpu_timer()
 
     end subroutine finalize_cpu_timer
 

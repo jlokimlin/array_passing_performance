@@ -3,9 +3,7 @@ program main
     use, intrinsic :: iso_fortran_env, only: &
         wp => REAL64, &
         ip => INT32, &
-        stdout => OUTPUT_UNIT, &
-        compiler_version, &
-        compiler_options
+        stdout => OUTPUT_UNIT
 
     use type_CpuTimer, only: &
         CpuTimer
@@ -93,7 +91,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -117,7 +115,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -141,7 +139,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -167,7 +165,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -191,7 +189,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -215,7 +213,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -241,7 +239,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -265,7 +263,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -288,7 +286,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -312,7 +310,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -336,7 +334,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         !
@@ -360,7 +358,7 @@ program main
             call cpu_timer%stop()
 
             ! Get elapsed CPU time
-            time = cpu_timer%get_total_cpu_time()
+            time = cpu_timer%get_elapsed_time()
         end associate
 
         ! Release memory
@@ -397,11 +395,7 @@ program main
     !
     !==> Print compiler info
     !
-    write( stdout, '(A)' ) ' '
-    write( stdout, '(4A)' ) 'This result was compiled by ', &
-        compiler_version(), ' using the options ', &
-        compiler_options()
-    write( stdout, '(A)' ) ' '
+    call cpu_timer%print_compiler_info()
 
 
 contains
@@ -415,7 +409,7 @@ contains
         real (wp)              :: mean
         !------------------------------------------------------------------
 
-        mean = sum(data) / max(1, size(data))
+        mean = sum(data)/max(1, size(data))
 
     end function get_mean
 
